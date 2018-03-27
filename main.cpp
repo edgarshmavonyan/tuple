@@ -51,21 +51,37 @@ int main() {
 
 **/
 
-
+/**
 int main() {
     const Tuple<int, int, int> kekos(3, 5, 4);
     Tuple<int, int, int> kekos2(3, 5, 4);
 
-    /**
+
+    // calls const reference
+    std::cout << get<0>(makeTuple(3, 4, 5)) << std::endl;
+    // calls const reference
+    std::cout << get<0>(kekos) << std::endl;
     // calls const reference
     std::cout << get<1>(kekos) << std::endl;
     // calls const reference
     std::cout << get<1>(makeTuple(3, 4, 5)) << std::endl;
-**/
+
     // calls reference
-    std::cout << get<1>(kekos2) << std::endl;
+    std::cout << get<2>(kekos2) << std::endl;
     // calls reference
     get<1>(kekos2) = 35;
+    // calls reference
+    std::cout << get<0>(kekos2) << std::endl;
+    // calls reference
+    get<0>(kekos2) = 31;
+
     return 0;
 }
+**/
 
+int main() {
+    Tuple<int, double> numb(3, 5.3);
+
+    get<double>(numb) = 4.7;
+    std::cout << get<double>(numb);
+}
