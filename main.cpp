@@ -1,7 +1,8 @@
 #include <iostream>
 #include "tuple.h"
 #include <tuple>
-#include <typeinfo>
+#include <type_traits>
+
 #include <vector>
 
 /**
@@ -50,10 +51,21 @@ int main() {
 
 **/
 
+
 int main() {
-//    std::tuple<int, double, double, double> recognizer;
-//    std::cout << std::get<3>(recognizer);
-    auto kek = makeTuple(5, 4, 3, 2, 1);
-    std::cout << get(3, kek) << std::endl;
+    const Tuple<int, int, int> kekos(3, 5, 4);
+    Tuple<int, int, int> kekos2(3, 5, 4);
+
+    /**
+    // calls const reference
+    std::cout << get<1>(kekos) << std::endl;
+    // calls const reference
+    std::cout << get<1>(makeTuple(3, 4, 5)) << std::endl;
+**/
+    // calls reference
+    std::cout << get<1>(kekos2) << std::endl;
+    // calls reference
+    get<1>(kekos2) = 35;
     return 0;
 }
+
