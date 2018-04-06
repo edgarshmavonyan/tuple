@@ -1,3 +1,5 @@
+
+
 // the goal
 template<typename... T_rest>
 class Tuple;
@@ -25,7 +27,6 @@ namespace _implementation {
 template<typename T1, typename... T_rest>
 class Tuple<T1, T_rest...>:
     public Tuple<T_rest...> {
-public:
 
     template<typename...>
     friend class Tuple;
@@ -61,9 +62,11 @@ public:
 protected:
     T1 _value;
 public:
-    constexpr Tuple(): _value() {}
+    constexpr Tuple(): _value(), Tuple<T_rest...>() {}
 
-    constexpr Tuple(const T1& value, T_rest... args): _value(value), Tuple<T_rest...>(args...) {}
+    constexpr Tuple(const T1& value, const T_rest&... args): _value(value), Tuple<T_rest...>(args...) {}
+
+//    constexpr Tuple(T1&& value, T_rest&&... args) : _value(std::forward<T1>(value)), Tuple<T_rest...>(std::forward<T_rest>(args...)...) {}
 
     constexpr Tuple(const Tuple<T1, T_rest...>& other) : _value(other._value), Tuple<T_rest...>(other) {}
 
@@ -71,8 +74,11 @@ public:
 
     template<typename U, typename... U_rest>
     Tuple<T1, T_rest...>& operator=(const Tuple<U, U_rest...>& other) {
+        static_assert(sizeof...(T_rest) == sizeof...(U_rest),
+                    "Assignment of tuples with different sizes is prohibited.");
         _value = other._value;
         *static_cast<Tuple<T_rest...>* >(this) = *static_cast<const Tuple<U_rest...>* >(&other);
+        return *this;
     }
 
     void swap(Tuple<T1, T_rest...>& other) {
@@ -366,3 +372,67 @@ template<typename U1, typename... U1_rest, typename U2, typename... U2_rest>
 constexpr bool operator>=(const Tuple<U1, U1_rest...>& first, const Tuple<U2, U2_rest...>& other) {
     return !_implementation::tupleComparator::_less(first, other);
 }
+
+//template<typename... T1_rest, typename... T2_rest>
+//constexpr Tuple<T1_rest..., T2_rest...> mergeTwoTuples(const Tuple<T1_rest...>& first, const Tuple<T2_rest...>& other);
+
+template<typename T1, typename... T1_rest, typename T2, typename... T2_rest>
+constexpr std::enable_if_t<sizeof...(T1_rest) != 0, Tuple<T1, T1_rest..., T2, T2_rest...> > mergeTwoTuples(const Tuple<T1, T1_rest...>& first, const Tuple<T2, T2_rest...>& other) {
+    Tuple<T1, T1_rest..., T2, T2_rest...> result;
+    get<0>(result) = get<0>(first);
+    *static_cast<Tuple<T1_rest..., T2, T2_rest...>*>(&result) = mergeTwoTuples(*static_cast<const Tuple<T1_rest...>*>(&first), other);
+    return result;
+}
+
+template<typename T1, typename T2, typename... T2_rest>
+constexpr Tuple<T1, T2, T2_rest...> mergeTwoTuples(const Tuple<T1>& first, const Tuple<T2, T2_rest...>& other) {
+    Tuple<T1, T2, T2_rest...> result;
+    get<0>(result) = get<0>(first);
+    *static_cast<Tuple<T2, T2_rest...>*>(&result) = other;
+    return result;
+}
+
+
+/**
+template<typename Tp1, typename Tp2, typename... Tp_rest>
+constexpr decltype(auto) tupleCat(const Tp1& first, const Tp2& other, Tp_rest... rest) {
+    return tupleCat(mergeTwoTuples(first, other), rest...);
+//    return mergeTwoTuples()
+}
+
+template<typename Tp1, typename Tp2>
+constexpr decltype(auto) tupleCat(const Tp1& first, const Tp2& other) {
+    return mergeTwoTuples(first, other);
+}
+**/
+template<typename Tp1, typename... Tp_rest>
+constexpr auto tupleCat(const Tp1& first, Tp_rest... rest) {
+    return mergeTwoTuples(first, tupleCat(rest...));
+}
+
+template<typename Tp1>
+constexpr auto tupleCat(const Tp1& first) {
+    return first;
+}
+/*
+template<typename T1, typename... T1_rest, typename... Tp_rest>
+constexpr std::enable_if_t<sizeof...(T1_rest) != 0, decltype(auto)>
+tupleCat(const Tuple<T1, T1_rest...>& first, Tp_rest... rest) {
+    Tuple<T_1, T_rests...> result = tupleCat(*static_cast<const Tuple<T1_rest...>*>(&first), rest...);
+
+   return tupleCat(tupleCat(*static_cast<const Tuple<T1_rest...>*>(&first), rest...));
+}
+*/
+/*
+template<typename T1, typename... T1_rest, typename... Tp_rest>
+constexpr decltype(auto) tupleCat(const Tuple<T1, T1_rest...>& first, Tp_rest... rest) {
+
+}
+
+template<typename T1, typename... Tp_rest>
+constexpr decltype(auto) tupleCat(const Tuple<T1>& first, Tp_rest... rest) {
+    auto res = tupleCat(rest...);
+
+    return tupleCat()
+}*/
+
